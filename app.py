@@ -140,16 +140,19 @@ empfehlen = st.button("Empfehlung holen", type="primary", disabled=bild_datei is
 # ---------------------------------------------------------------------------
 
 MOCK_ANTWORT = """\
-**Weißwein: Vermentino, Sardinien (34 €)**
+**Weißwein: Vermentino, Sardinien (34 € auf der Karte)**
 Ähnliche Stilrichtung wie deine Lugana: frisch, Zitrusnoten, mittlerer \
 Körper, unoaked statt buttrig-schwer.
+Vivino: 3.8 ★ (Beispielwert) · Einkaufspreis: ca. 10-14 € (Beispielwert)
 
-**Rosé: Spätburgunder Rosé, Baden (31 €)**
+**Rosé: Spätburgunder Rosé, Baden (31 € auf der Karte)**
 Gleiche Traube (Spätburgunder = Pinot Noir) wie dein bisheriger \
 Lieblings-Rosé, hell und frisch mit roten Beeren.
+Vivino: 3.6 ★ (Beispielwert) · Einkaufspreis: ca. 9-12 € (Beispielwert)
 
 *(Das ist eine Beispiel-Antwort im Demo-Modus — mit echtem API-Key liest \
-der Agent hier deine tatsächliche Karte.)*
+der Agent hier deine tatsächliche Karte und sucht echte Vivino-Bewertungen \
+und Preise im Web.)*
 """
 
 
@@ -174,13 +177,26 @@ def hole_empfehlung(uploaded_file, profil_text):
         "Karte, wähle die 1-2 besten Treffer (z.B. je einen Weißwein/Rosé/"
         "Rotwein, soweit vorhanden und passend) und begründe kurz und "
         "konkret, warum sie zum Profil passen (z.B. Rebsorte, Stil, Region, "
-        "Preis). Antworte auf Deutsch, in Markdown, ohne unnötige Länge."
+        "Preis).\n\n"
+        "Für JEDEN empfohlenen Wein nutze außerdem die Websuche, um "
+        "herauszufinden:\n"
+        "1. Die Vivino-Bewertung (Punkte von 1-5 und, falls zu finden, die "
+        "Anzahl der Bewertungen), z.B. \"Vivino: 3.9 ★ (12.000 Bewertungen)\".\n"
+        "2. Den ungefähren Einkaufspreis im Handel/Online-Weinshop (also was "
+        "man für die Flasche zum Selberkaufen zahlt, NICHT der Preis auf der "
+        "Restaurantkarte), inkl. kurzer Quellenangabe, z.B. \"Einkaufspreis: "
+        "ca. 12-15 € (z.B. weinfreunde.de)\".\n"
+        "Findest du zu einem Wein nichts Eindeutiges (z.B. weil Jahrgang "
+        "oder genauer Name unklar ist), schreib das ehrlich dazu statt etwas "
+        "zu erfinden.\n\n"
+        "Antworte auf Deutsch, in Markdown, ohne unnötige Länge."
     )
 
     response = client.messages.create(
         model=MODEL_NAME,
-        max_tokens=1000,
+        max_tokens=1500,
         system=system_prompt,
+        tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 4}],
         messages=[
             {
                 "role": "user",
@@ -201,7 +217,11 @@ def hole_empfehlung(uploaded_file, profil_text):
             }
         ],
     )
-    return response.content[0].text
+    # Bei Websuche kann die Antwort aus mehreren Blöcken bestehen (Text +
+    # Suchergebnisse dazwischen) — wir hängen nur die Text-Blöcke aneinander.
+    return "\n\n".join(
+        block.text for block in response.content if block.type == "text"
+    )
 
 
 if empfehlen and bild_datei is not None:
