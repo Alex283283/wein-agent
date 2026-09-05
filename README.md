@@ -45,10 +45,11 @@ Kein Git/Terminal nötig — komplett über den Browser:
    Handy im Browser öffnen oder dir als Lesezeichen/Homescreen-Symbol
    speichern.
 
-## Später: echten API-Key hinterlegen
+## Echten API-Key hinterlegen
 
 Ohne Key läuft die App im Demo-Modus (Beispiel-Antwort). Sobald du einen
-Key von https://console.anthropic.com hast:
+Key von https://console.anthropic.com hast (dort einloggen/registrieren,
+unter "API Keys" einen neuen Key erstellen, etwas Guthaben aufladen):
 
 1. In Streamlit Cloud bei deiner App auf **Settings → Secrets**.
 2. Dort eintragen:
@@ -56,3 +57,13 @@ Key von https://console.anthropic.com hast:
    ANTHROPIC_API_KEY = "dein-key-hier"
    ```
 3. Speichern — die App startet neu und liest ab jetzt echte Weinkarten.
+
+## Kosten
+
+Pro Anfrage fallen minimale Kosten an: das Lesen des Kartenfotos plus die
+Textantwort kostet üblicherweise ein paar Cent. Für die Vivino-Bewertung
+und den Einkaufspreis nutzt der Agent zusätzlich eine Websuche — die
+kostet $10 pro 1.000 Suchanfragen, bei üblicherweise 2-4 Suchen pro
+Empfehlung bleibt das also im Cent-Bereich pro Nutzung. Ein Blick ins
+Guthaben/Dashboard auf console.anthropic.com lohnt sich trotzdem ab und
+zu.
