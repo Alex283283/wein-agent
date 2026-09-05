@@ -194,7 +194,9 @@ def hole_empfehlung(uploaded_file, profil_text):
 
     response = client.messages.create(
         model=MODEL_NAME,
-        max_tokens=1500,
+        # Großzügig bemessen: Bild lesen + bis zu 4 Websuchen + Text
+        # brauchen mehr "Denk-Platz" als eine reine Text-Antwort.
+        max_tokens=4096,
         system=system_prompt,
         tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": 4}],
         messages=[
@@ -219,9 +221,21 @@ def hole_empfehlung(uploaded_file, profil_text):
     )
     # Bei Websuche kann die Antwort aus mehreren Blöcken bestehen (Text +
     # Suchergebnisse dazwischen) — wir hängen nur die Text-Blöcke aneinander.
-    return "\n\n".join(
+    antwort = "\n\n".join(
         block.text for block in response.content if block.type == "text"
     )
+
+    if not antwort.strip():
+        # Kam nichts Verwertbares zurück (z.B. weil das Token-Limit mitten in
+        # den Websuchen erreicht wurde), zeigen wir das transparent an statt
+        # einer stillen Leerseite.
+        antwort = (
+            "⚠️ Ich konnte diesmal keine vollständige Antwort erzeugen "
+            f"(Grund laut API: `{response.stop_reason}`). "
+            "Versuch es gerne nochmal — manchmal hilft ein zweiter Versuch, "
+            "oder probier ein schärferes/kleineres Foto der Karte."
+        )
+    return antwort
 
 
 if empfehlen and bild_datei is not None:
